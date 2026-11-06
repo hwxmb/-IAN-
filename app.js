@@ -22,6 +22,7 @@
   const browseEyebrow = $("#browseEyebrow");
   const browseTitle = $("#browseTitle");
   const browseNote = $("#browseNote");
+  const browseEditBtn = $("#browseEditBtn");
   const loadBtn = $("#loadBtn");
   const prevBtnBrowse = $("#prevBtnBrowse");
   const nextBtnBrowse = $("#nextBtnBrowse");
@@ -60,6 +61,7 @@
   const detailEyebrow = $("#detailEyebrow");
   const detailTitle = $("#detailTitle");
   const detailNote = $("#detailNote");
+  const editBtn = $("#editBtn");
   const removeBtn = $("#removeBtn");
   const trackCountLabel = $("#trackCountLabel");
   const tracklist = $("#tracklist");
@@ -77,6 +79,7 @@
   const toast = $("#toast");
 
   const addDialog = $("#addDialog");
+  const addDialogTitle = $("#addDialogTitle");
   const addForm = $("#addForm");
   const closeAddBtn = $("#closeAddBtn");
   const cancelAddBtn = $("#cancelAddBtn");
@@ -93,6 +96,8 @@
   const discPreview = $("#discPreview");
   const discStatus = $("#discStatus");
   const discUploadTile = $("#discUploadTile");
+  const clearFrontBtn = $("#clearFrontBtn");
+  const clearDiscBtn = $("#clearDiscBtn");
   const formError = $("#formError");
   const saveCdBtn = $("#saveCdBtn");
   const draftTrackCount = $("#draftTrackCount");
@@ -124,6 +129,7 @@
   const MEDIA_STORE_NAME = "audio";
   const audioObjectUrls = new Map();
   const inlineTrackUrls = new WeakMap();
+  const preloadedDiscs = new Set();
   let mediaDbPromise = null;
 
   const state = {
@@ -147,6 +153,7 @@
     pendingRemoveId: null,
     upload: { front: null, disc: null },
     draftTracks: [],
+    editingAlbumId: null,
     trackEditingIndex: -1,
     trackDraft: null,
     trackLoadToken: 0,
@@ -174,6 +181,48 @@
 
   function trackCountText(count) {
     return `${pad2(count || 0)} TRACK${Number(count) === 1 ? "" : "S"}`;
+  }
+
+  function formatLrcTime(seconds) {
+    const value = Math.max(0, Number(seconds) || 0);
+    const minutes = Math.floor(value / 60);
+    const wholeSeconds = Math.floor(value % 60);
+    const centiseconds = Math.floor((value - Math.floor(value)) * 100);
+    return `[${pad2(minutes)}:${pad2(wholeSeconds)}.${pad2(centiseconds)}]`;
+  }
+
+  function lyricsToEditorText(lines, timed) {
+    return (Array.isArray(lines) ? lines : [])
+      .map((line) => {
+        const english = String(line[1] || "").trim();
+        const chinese = String(line[2] || "").trim();
+        const body = [english, chinese].filter(Boolean).join(" ");
+        if (!body) return "";
+        return timed && Number.isFinite(line[0]) ? `${formatLrcTime(line[0])}${body}` : body;
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  function setArtworkUpload(kind, dataUrl) {    const isFront = kind === "front";
+    const tile = isFront ? frontUploadTile : discUploadTile;
+    const preview = isFront ? frontPreview : discPreview;
+    const status = isFront ? frontStatus : discStatus;
+    const clearButton = isFront ? clearFrontBtn : clearDiscBtn;
+    state.upload[kind] = dataUrl || null;
+
+    if (dataUrl) {
+      preview.src = dataUrl;
+      tile.classList.add("has-image");
+      status.textContent = "更换";
+    } else {
+      preview.removeAttribute("src");
+      tile.classList.remove("has-image");
+      status.textContent = "选择图片";
+    }
+    const fileInput = tile.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = "";
+    clearButton.hidden = !dataUrl;
   }
 
   function formatTime(seconds, padded = false) {
@@ -329,9 +378,8 @@
     });
   }
 
-  function purgeAlbumAudio(album) {
-    if (!album || !album.tracks) return;
-    const keys = album.tracks.map((track) => track.audioKey).filter(Boolean);
+  function purgeAudioKeys(keys) {
+    if (!keys || !keys.length) return;
     keys.forEach((key) => {
       const url = audioObjectUrls.get(key);
       if (url) {
@@ -342,6 +390,11 @@
     deleteAudioKeys(keys).catch(() => {
       /* noop — orphaned blobs are harmless */
     });
+  }
+
+  function purgeAlbumAudio(album) {
+    if (!album || !album.tracks) return;
+    purgeAudioKeys(album.tracks.map((track) => track.audioKey).filter(Boolean));
   }
 
   function dataUrlToBlob(dataUrl) {
@@ -510,6 +563,7 @@
       : [];
     return {
       title: String(raw.title).slice(0, 100),
+      fileName: String(raw.fileName || "").slice(0, 180),
       duration: Number(raw.duration) || 0,
       format: String(raw.format || "MP3").toUpperCase().slice(0, 8),
       audioKey: String(raw.audioKey || ""),
@@ -625,27 +679,11 @@
     return button;
   }
 
-  function buildAddCard() {
-    const card = h("article", "album-card is-add");
-    card.tabIndex = 0;
-    card.setAttribute("role", "button");
-    card.setAttribute("aria-label", "添加一张新的 CD");
-    const inner = h("div", "add-card");
-    inner.append(
-      h("span", "add-card-circle", "+"),
-      h("b", "", "ADD A DISC"),
-      h("small", "", "封面、歌曲与歌词")
-    );
-    card.append(inner);
-    return card;
-  }
-
   function renderCarousel() {
     albumTrack.replaceChildren();
     state.albums.forEach((album, index) => {
       albumTrack.append(buildAlbumCard(album, index));
     });
-    albumTrack.append(buildAddCard());
 
     carouselTicks.replaceChildren();
     state.albums.forEach((album, index) => {
@@ -691,20 +729,7 @@
     });
 
     const addCard = $(".album-card.is-add", albumTrack);
-    if (addCard) {
-      const offset = state.albums.length - state.activeIndex;
-      const abs = Math.abs(offset);
-      const hidden = abs > 2.35;
-      const distance = abs <= 1 ? abs : 1 + (abs - 1) * 0.55;
-      addCard.style.setProperty("--x", `${Math.sign(offset) * distance * unit}px`);
-      addCard.style.setProperty("--z", `${-Math.min(abs, 2) * 95}px`);
-      addCard.style.setProperty("--ry", `${-offset * 24}deg`);
-      addCard.style.setProperty("--scale", String(Math.max(0.76, 1 - abs * 0.105)));
-      addCard.style.opacity = hidden ? "0" : String(Math.max(0.58, 1 - Math.max(0, abs - 1) * 0.25));
-      addCard.style.zIndex = String(24 - Math.round(abs * 4));
-      addCard.dataset.hidden = hidden ? "true" : "false";
-      addCard.style.pointerEvents = hidden ? "none" : "";
-    }
+    if (addCard) addCard.remove();
   }
 
   function updateCarouselActiveState() {
@@ -725,8 +750,18 @@
     totalCountLabel.textContent = pad2(state.albums.length);
   }
 
+  function preloadAlbumDisc(album) {
+    const src = album && album.disc;
+    if (!src || preloadedDiscs.has(src)) return;
+    preloadedDiscs.add(src);
+    const image = new Image();
+    image.decoding = "async";
+    image.src = src;
+  }
+
   function updateBrowseInfo(album) {
     if (!album) return;
+    preloadAlbumDisc(album);
     fillEyebrow(browseEyebrow, [
       album.year,
       album.type,
@@ -735,6 +770,7 @@
     browseTitle.textContent = album.title;
     browseNote.textContent =
       album.note || (album.custom ? "私人收藏 · 自选封面、曲目与歌词。" : "");
+    browseEditBtn.hidden = !album.custom;
     setAccent(album.accent);
     document.title = `${album.title} — DPR IAN Archive`;
 
@@ -997,6 +1033,7 @@
     setArtworkImage(deckDiscImg, album.disc, cdDisc);
     setArtworkImage(miniCoverImg, album.front, miniSleeve);
     removeBtn.hidden = !album.custom;
+    editBtn.hidden = !album.custom;
     detailContent.classList.toggle("is-private", Boolean(album.custom) && !hasTracks);
     privatePanel.hidden = !(Boolean(album.custom) && !hasTracks);
 
@@ -1029,6 +1066,30 @@
       row.append(num, name, duration);
       tracklist.append(row);
     });
+  }
+
+  function refreshOpenPlayerAfterEdit(album) {
+    state.currentAlbum = album;
+    state.currentTrackIndex = -1;
+    state.isPlaying = false;
+    state.autoPlayPending = false;
+    state.autoPlayArmed = false;
+    state.isTrackLoading = false;
+    state.trackLoadToken += 1;
+    audio.pause();
+    playerView.classList.remove("is-playing", "is-idle-spin");
+    playerView.scrollTop = 0;
+    renderDetail(album);
+    setAccent(album.accent);
+    document.title = `${album.title} — DPR IAN Archive`;
+
+    if (album.tracks && album.tracks.length) {
+      selectTrack(0, { autoplay: false, force: true });
+      setStageStatus("READY");
+    } else {
+      prepareEmptyPlayer(album);
+      setStageStatus("PRIVATE PRESSING");
+    }
   }
 
   /* ---------------- track + playback ---------------- */
@@ -1562,16 +1623,24 @@
       trackDialogTitle.textContent = "编辑歌曲";
       trackTitle.value = track.title;
       state.trackDraft = {
-        file: track.file,
-        fileName: track.fileName,
-        duration: track.duration,
-        format: track.format,
+        file: track.file || null,
+        fileName: track.fileName || "",
+        duration: track.duration || 0,
+        format: track.format || "AUDIO",
+        audioKey: track.audioKey || "",
+        originalAudioKey: track.audioKey || "",
       };
-      trackAudioName.textContent = track.fileName || track.title;
-      trackAudioMeta.textContent = `${track.format || "AUDIO"} · ${formatTime(track.duration || 0)}`;
+      const hasAudio = Boolean(track.file || track.audioKey);
+      if (hasAudio) {
+        trackAudioTile.classList.add("has-audio");
+      }
+      trackAudioName.textContent =
+        track.fileName ||
+        (track.audioKey ? `${track.title} · 已保存音频` : "选择音频文件");
+      trackAudioMeta.textContent = `${track.format || "AUDIO"} · ${formatTime(track.duration || 0)}${track.audioKey ? " · 已保存" : ""}`;
       trackAudioBadge.textContent = track.format || "AUDIO";
-      trackAudioTile.classList.add("has-audio");
-      trackLyrics.value = track.lyricsRaw || "";
+      trackLyrics.value =
+        track.lyricsRaw || lyricsToEditorText(track.lyrics || [], Boolean(track.lyricsTimed));
       if (track.lyrics && track.lyrics.length) {
         trackLyricsHint.textContent = track.lyricsTimed
           ? "已识别时间轴，播放时会自动滚动。"
@@ -1619,11 +1688,14 @@
     try {
       const duration = await readAudioDuration(file);
       const format = formatFromFileName(file.name);
+      const previousKey = state.trackDraft?.audioKey || "";
       state.trackDraft = {
         file,
         fileName: file.name,
         duration,
         format,
+        audioKey: previousKey,
+        originalAudioKey: previousKey,
       };
       trackAudioName.textContent = file.name;
       trackAudioMeta.textContent = `${format} · ${formatTime(duration)}`;
@@ -1632,11 +1704,14 @@
       if (!trackTitle.value.trim()) trackTitle.value = titleFromFileName(file.name);
     } catch (error) {
       const format = formatFromFileName(file.name);
+      const previousKey = state.trackDraft?.audioKey || "";
       state.trackDraft = {
         file,
         fileName: file.name,
         duration: 0,
         format,
+        audioKey: previousKey,
+        originalAudioKey: previousKey,
       };
       trackAudioName.textContent = file.name;
       trackAudioMeta.textContent = `${format} · 时长将在播放时识别`;
@@ -1655,7 +1730,7 @@
       trackTitle.focus();
       return;
     }
-    if (!state.trackDraft || !state.trackDraft.file) {
+    if (!state.trackDraft || (!state.trackDraft.file && !state.trackDraft.audioKey)) {
       trackFormError.textContent = "请选择这首歌的 MP3 / M4A 音频。";
       trackAudioTile.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
@@ -1671,9 +1746,11 @@
     const draft = {
       title,
       fileName: state.trackDraft.fileName,
-      file: state.trackDraft.file,
+      file: state.trackDraft.file || null,
       duration: state.trackDraft.duration || 0,
       format: state.trackDraft.format || "MP3",
+      audioKey: state.trackDraft.audioKey || "",
+      originalAudioKey: state.trackDraft.audioKey || "",
       lyrics: parsed.lines,
       lyricsTimed: parsed.timed,
       lyricsRaw: rawLyrics,
@@ -1690,8 +1767,9 @@
 
   /* ---------------- add / remove custom CDs ---------------- */
 
-  function openAddDialog() {
+  function openAddDialog(album = null) {
     if (trackDialog.open) closeTrackDialog();
+    state.editingAlbumId = album && album.custom ? album.id : null;
     state.upload.front = null;
     state.upload.disc = null;
     state.draftTracks = [];
@@ -1699,17 +1777,45 @@
     state.trackDraft = null;
     state.isSavingAlbum = false;
     addForm.reset();
-    cdArtist.value = "DPR IAN";
-    cdYear.value = String(new Date().getFullYear());
-    frontPreview.removeAttribute("src");
-    discPreview.removeAttribute("src");
-    frontUploadTile.classList.remove("has-image");
-    discUploadTile.classList.remove("has-image");
-    frontStatus.textContent = "选择图片";
-    discStatus.textContent = "选择图片";
     formError.textContent = "";
     saveCdBtn.disabled = false;
-    updateButtonLabel(saveCdBtn, "收入唱片架");
+
+    if (album && album.custom) {
+      addDialogTitle.textContent = "编辑唱片";
+      updateButtonLabel(saveCdBtn, "保存修改");
+      cdTitle.value = album.title || "";
+      cdArtist.value = album.artist || "DPR IAN";
+      cdYear.value = album.year || String(new Date().getFullYear());
+      cdType.value = album.type || "EP";
+      cdNote.value = album.note || "";
+      let matchedAccent = false;
+      addForm.querySelectorAll('input[name="accent"]').forEach((input) => {
+        const selected = input.value === album.accent;
+        input.checked = selected;
+        if (selected) matchedAccent = true;
+      });
+      if (!matchedAccent) {
+        const firstAccent = addForm.querySelector('input[name="accent"]');
+        if (firstAccent) firstAccent.checked = true;
+      }
+      state.draftTracks = (album.tracks || []).map((track) => ({
+        ...track,
+        file: null,
+        audioKey: track.audioKey || "",
+        originalAudioKey: track.audioKey || "",
+        lyricsRaw: lyricsToEditorText(track.lyrics || [], Boolean(track.lyricsTimed)),
+      }));
+      setArtworkUpload("front", album.front || null);
+      setArtworkUpload("disc", album.disc || null);
+    } else {
+      addDialogTitle.textContent = "添加一张 CD";
+      updateButtonLabel(saveCdBtn, "收入唱片架");
+      cdArtist.value = "DPR IAN";
+      cdYear.value = String(new Date().getFullYear());
+      setArtworkUpload("front", null);
+      setArtworkUpload("disc", null);
+    }
+
     renderDraftTracks();
     if (typeof addDialog.showModal === "function") addDialog.showModal();
     else addDialog.setAttribute("open", "");
@@ -1723,13 +1829,15 @@
     state.draftTracks = [];
     state.trackEditingIndex = -1;
     state.trackDraft = null;
+    state.editingAlbumId = null;
   }
 
   async function handleUpload(file, kind) {
     if (!file) return;
     const tile = kind === "front" ? frontUploadTile : discUploadTile;
     const status = kind === "front" ? frontStatus : discStatus;
-    const preview = kind === "front" ? frontPreview : discPreview;
+    const clearButton = kind === "front" ? clearFrontBtn : clearDiscBtn;
+    const previous = state.upload[kind];
 
     if (!file.type || !file.type.startsWith("image/")) {
       formError.textContent = "请选择 JPG、PNG 或 WebP 图片。";
@@ -1743,15 +1851,13 @@
     formError.textContent = "";
     status.textContent = "处理中…";
     tile.classList.remove("has-image");
+    clearButton.hidden = true;
 
     try {
       const dataUrl = await processImage(file, kind === "front" ? "cover" : "disc");
-      state.upload[kind] = dataUrl;
-      preview.src = dataUrl;
-      tile.classList.add("has-image");
-      status.textContent = "更换";
+      setArtworkUpload(kind, dataUrl);
     } catch (error) {
-      status.textContent = "选择图片";
+      setArtworkUpload(kind, previous);
       formError.textContent = "图片读取失败，请换一张试试。";
     }
   }
@@ -1831,6 +1937,17 @@
       return;
     }
 
+    const editingId = state.editingAlbumId;
+    const editingAlbum = editingId
+      ? state.customAlbums.find((album) => album.id === editingId)
+      : null;
+    if (editingId && !editingAlbum) {
+      formError.textContent = "找不到这张唱片，请关闭后重新打开。";
+      return;
+    }
+
+    const wasPlayer = app.dataset.view === "player";
+    const currentIdAtOpen = state.currentAlbum ? state.currentAlbum.id : null;
     state.isSavingAlbum = true;
     saveCdBtn.disabled = true;
     updateButtonLabel(saveCdBtn, "保存中…");
@@ -1841,7 +1958,7 @@
       const tracks = [];
       for (const draft of state.draftTracks) {
         let audioKey = draft.audioKey || "";
-        if (draft.file && !audioKey) {
+        if (draft.file) {
           audioKey = `track-${Date.now()}-${Math.random().toString(16).slice(2)}`;
           await putAudioBlob(audioKey, draft.file);
           createdKeys.push(audioKey);
@@ -1859,8 +1976,8 @@
       }
 
       const checkedAccent = $('input[name="accent"]:checked', addForm);
-      const album = {
-        id: `custom-${Date.now()}`,
+      const previousCustomAlbums = state.customAlbums;
+      const baseAlbum = {
         custom: true,
         title,
         shortTitle: title,
@@ -1875,18 +1992,51 @@
         tracks,
       };
 
-      const previous = state.customAlbums;
-      state.customAlbums = [...state.customAlbums, album];
+      let album;
+      if (editingAlbum) {
+        album = { ...editingAlbum, ...baseAlbum };
+        state.customAlbums = previousCustomAlbums.map((item) =>
+          item.id === editingAlbum.id ? album : item
+        );
+      } else {
+        album = { id: `custom-${Date.now()}`, ...baseAlbum };
+        state.customAlbums = [...previousCustomAlbums, album];
+      }
+
       if (!persistCustomAlbums()) {
-        state.customAlbums = previous;
+        state.customAlbums = previousCustomAlbums;
         throw new Error("Local metadata storage is full");
       }
 
       state.albums = [...BUILTIN_ALBUMS, ...state.customAlbums];
+      const albumIndex = state.albums.findIndex((item) => item.id === album.id);
+      const oldKeys = editingAlbum
+        ? editingAlbum.tracks.map((track) => track.audioKey).filter(Boolean)
+        : [];
+      const usedKeys = new Set(tracks.map((track) => track.audioKey));
+      const staleKeys = oldKeys.filter((key) => !usedKeys.has(key));
+
       closeAddDialog();
       renderCarousel();
-      setActiveIndex(state.albums.length - 1, { force: true, userAction: true });
-      showToast(tracks.length ? `已收入唱片架 · ${pad2(tracks.length)} 首曲目` : "已收入私人唱片架");
+      setActiveIndex(albumIndex, { force: true, userAction: true });
+
+      if (wasPlayer && currentIdAtOpen === album.id) {
+        refreshOpenPlayerAfterEdit(album);
+        showToast(
+          tracks.length ? `唱片修改已保存 · ${pad2(tracks.length)} 首曲目` : "唱片修改已保存"
+        );
+      } else {
+        showToast(
+          editingAlbum
+            ? tracks.length
+              ? `唱片修改已保存 · ${pad2(tracks.length)} 首曲目`
+              : "唱片修改已保存"
+            : tracks.length
+              ? `已收入唱片架 · ${pad2(tracks.length)} 首曲目`
+              : "已收入私人唱片架"
+        );
+      }
+      purgeAudioKeys(staleKeys);
     } catch (error) {
       await deleteAudioKeys(createdKeys).catch(() => {
         /* noop */
@@ -1895,11 +2045,10 @@
         error && /metadata/i.test(error.message)
           ? "本机浏览器存储空间不足，请删除一些旧 CD 后重试。"
           : "保存失败，可能是浏览器阻止了本地音频存储，请换 Chrome / Edge 再试。";
-      updateButtonLabel(saveCdBtn, "收入唱片架");
     } finally {
       state.isSavingAlbum = false;
       saveCdBtn.disabled = false;
-      updateButtonLabel(saveCdBtn, "收入唱片架");
+      updateButtonLabel(saveCdBtn, editingId ? "保存修改" : "收入唱片架");
     }
   }
 
@@ -1972,7 +2121,18 @@
     });
 
     backBtn.addEventListener("click", closePlayer);
-    addBtn.addEventListener("click", openAddDialog);
+    if (addBtn) addBtn.addEventListener("click", () => openAddDialog());
+    browseEditBtn.addEventListener("click", () => {
+      const album = state.albums[state.activeIndex];
+      if (album && album.custom) openAddDialog(album);
+    });
+    editBtn.addEventListener("click", () => {
+      if (!state.currentAlbum || !state.currentAlbum.custom) return;
+      audio.pause();
+      openAddDialog(state.currentAlbum);
+    });
+    clearFrontBtn.addEventListener("click", () => setArtworkUpload("front", null));
+    clearDiscBtn.addEventListener("click", () => setArtworkUpload("disc", null));
     loadBtn.addEventListener("click", () => openAlbum(state.activeIndex));
     scrollCue.addEventListener("click", () => {
       if (app.dataset.view !== "player") return;
@@ -2354,13 +2514,27 @@
     }
   }
 
+  function clearLegacyCustomData() {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      /* noop */
+    }
+    try {
+      indexedDB.deleteDatabase(MEDIA_DB_NAME);
+    } catch (error) {
+      /* noop */
+    }
+  }
+
   function init() {
     if (!BUILTIN_ALBUMS.length) {
       console.warn("DPRIAN album data was not loaded.");
       return;
     }
-    state.customAlbums = loadCustomAlbums();
-    state.albums = [...BUILTIN_ALBUMS, ...state.customAlbums];
+    clearLegacyCustomData();
+    state.customAlbums = [];
+    state.albums = [...BUILTIN_ALBUMS];
     state.activeIndex = Math.min(2, state.albums.length - 1);
     audio.volume = state.volume;
 

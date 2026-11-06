@@ -32,10 +32,6 @@
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5M7.4 10H17"/></svg>
           返回唱片架
         </button>
-        <button class="add-btn" id="addBtn" type="button">
-          <span class="add-icon" aria-hidden="true"></span>
-          添加 CD
-        </button>
       </div>
     </header>
 
@@ -77,6 +73,7 @@
           </button>
           <span class="key-hint"><kbd>ENTER</kbd> 开始</span>
         </div>
+        <button class="browse-edit-btn" id="browseEditBtn" type="button" hidden>编辑这张 CD 的资料与曲目</button>
       </section>
 
       <footer class="browse-foot" aria-hidden="true">
@@ -197,7 +194,10 @@
           <header class="album-head">
             <div class="album-head-top">
               <p class="eyebrow" id="detailEyebrow">2023 <span class="dot"></span> EP <span class="dot"></span> 07 TRACKS</p>
-              <button class="remove-btn" id="removeBtn" type="button">移出收藏</button>
+              <div class="album-actions">
+                <button class="edit-btn" id="editBtn" type="button" hidden>编辑唱片</button>
+                <button class="remove-btn" id="removeBtn" type="button">移出收藏</button>
+              </div>
             </div>
             <h1 class="detail-title" id="detailTitle">Dear Insanity...</h1>
             <p class="detail-note" id="detailNote"></p>
@@ -266,7 +266,7 @@
       <header class="modal-head">
         <div>
           <span class="section-kicker">PRIVATE PRESSING / 私人收藏</span>
-          <h2>添加一张 CD</h2>
+          <h2 id="addDialogTitle">添加一张 CD</h2>
         </div>
         <button class="modal-close" type="button" id="closeAddBtn" aria-label="关闭">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -323,6 +323,11 @@
             </span>
             <span class="upload-status" id="discStatus">选择图片</span>
           </label>
+          <div class="artwork-clear-row">
+            <button class="clear-art-btn" id="clearFrontBtn" type="button" hidden>移除封面</button>
+            <button class="clear-art-btn" id="clearDiscBtn" type="button" hidden>移除碟面</button>
+            <span>留空会显示为黑色</span>
+          </div>
         </div>
 
         <section class="tracks-editor" aria-labelledby="tracksEditorTitle">
