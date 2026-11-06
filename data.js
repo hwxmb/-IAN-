@@ -17,7 +17,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "MITO",
           "duration": 99,
-          "audio": "MITO 1/歌曲/MITO - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/MITO - DPR IAN.m4a",
           "lyrics": [
             [
               20.06,
@@ -114,7 +114,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "So Beautiful",
           "duration": 187,
-          "audio": "MITO 1/歌曲/So Beautiful - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/So Beautiful - DPR IAN.m4a",
           "lyrics": [
             [
               31.72,
@@ -311,7 +311,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Dope Lovers",
           "duration": 200,
-          "audio": "MITO 1/歌曲/Dope Lovers - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/Dope Lovers - DPR IAN.m4a",
           "lyrics": [
             [
               2.51,
@@ -848,7 +848,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "No Blueberries",
           "duration": 185,
-          "audio": "MITO 1/歌曲/No Blueberries - DPR IAN, DPR LIVE, CL.m4a",
+          "audio": "MITO1/歌曲/No Blueberries - DPR IAN, DPR LIVE, CL.m4a",
           "lyrics": [
             [
               13.17,
@@ -1365,7 +1365,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Nerves",
           "duration": 195,
-          "audio": "MITO 1/歌曲/Nerves - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/Nerves - DPR IAN.m4a",
           "lyrics": [
             [
               13.9,
@@ -1682,7 +1682,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Scaredy Cat",
           "duration": 171,
-          "audio": "MITO 1/歌曲/Scaredy Cat - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/Scaredy Cat - DPR IAN.m4a",
           "lyrics": [
             [
               8.26,
@@ -2024,7 +2024,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Welcome To The Show",
           "duration": 205,
-          "audio": "MITO 1/歌曲/Welcome To The Show - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/Welcome To The Show - DPR IAN.m4a",
           "lyrics": [
             [
               2.51,
@@ -2266,7 +2266,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "No Silhouette",
           "duration": 149,
-          "audio": "MITO 1/歌曲/No Silhouette - DPR IAN.m4a",
+          "audio": "MITO1/歌曲/No Silhouette - DPR IAN.m4a",
           "lyrics": [
             [
               1.23,
@@ -2534,7 +2534,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Seraph",
           "duration": 146,
-          "audio": "MITO 2/歌曲/Seraph - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Seraph - DPR IAN.m4a",
           "lyrics": [
             [
               63.84,
@@ -2641,7 +2641,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "1 Shot",
           "duration": 144,
-          "audio": "MITO 2/歌曲/1 Shot - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/1 Shot - DPR IAN.m4a",
           "lyrics": [
             [
               10.52,
@@ -2923,7 +2923,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Mood",
           "duration": 182,
-          "audio": "MITO 2/歌曲/Mood - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Mood - DPR IAN.m4a",
           "lyrics": [
             [
               0.3,
@@ -3345,7 +3345,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Miss Understood",
           "duration": 201,
-          "audio": "MITO 2/歌曲/Miss Understood - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Miss Understood - DPR IAN.m4a",
           "lyrics": [
             [
               10.73,
@@ -3652,7 +3652,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Avalon",
           "duration": 196,
-          "audio": "MITO 2/歌曲/Avalon - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Avalon - DPR IAN.m4a",
           "lyrics": [
             [
               1.25,
@@ -3924,7 +3924,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Merry Go",
           "duration": 190,
-          "audio": "MITO 2/歌曲/Merry Go - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Merry Go - DPR IAN.m4a",
           "lyrics": [
             [
               0.58,
@@ -4256,7 +4256,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Ribbon",
           "duration": 215,
-          "audio": "MITO 2/歌曲/Ribbon - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Ribbon - DPR IAN.m4a",
           "lyrics": [
             [
               2.07,
@@ -4508,7 +4508,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Winterfall",
           "duration": 216,
-          "audio": "MITO 2/歌曲/Winterfall - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Winterfall - DPR IAN.m4a",
           "lyrics": [
             [
               0.3,
@@ -4825,7 +4825,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Calico",
           "duration": 223,
-          "audio": "MITO 2/歌曲/Calico - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Calico - DPR IAN.m4a",
           "lyrics": [
             [
               1.38,
@@ -5177,7 +5177,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Mr. Insanity",
           "duration": 167,
-          "audio": "MITO 2/歌曲/Mr. Insanity - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Mr. Insanity - DPR IAN.m4a",
           "lyrics": [
             [
               1.34,
@@ -5409,7 +5409,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Ballroom Extravaganza",
           "duration": 190,
-          "audio": "MITO 2/歌曲/Ballroom Extravaganza - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Ballroom Extravaganza - DPR IAN.m4a",
           "lyrics": [
             [
               14.54,
@@ -5576,7 +5576,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Sometimes I'm",
           "duration": 157,
-          "audio": "MITO 2/歌曲/Sometimes I'm - DPR IAN.m4a",
+          "audio": "MITO2/歌曲/Sometimes I'm - DPR IAN.m4a",
           "lyrics": [
             [
               1.26,
@@ -5949,7 +5949,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Famous Last Words",
           "duration": 122,
-          "audio": "Dear Insanity/歌曲/Famous Last Words - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/Famous Last Words - DPR IAN.m4a",
           "lyrics": [
             [
               1.99,
@@ -6016,7 +6016,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Welcome To The Other Side",
           "duration": 220,
-          "audio": "Dear Insanity/歌曲/Welcome To The Other Side - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/Welcome To The Other Side - DPR IAN.m4a",
           "lyrics": [
             [
               34.37,
@@ -6193,7 +6193,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Don't Go Insane",
           "duration": 205,
-          "audio": "Dear Insanity/歌曲/Don't Go Insane - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/Don't Go Insane - DPR IAN.m4a",
           "lyrics": [
             [
               3.42,
@@ -6490,7 +6490,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Bad Cold",
           "duration": 196,
-          "audio": "Dear Insanity/歌曲/Bad Cold - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/Bad Cold - DPR IAN.m4a",
           "lyrics": [
             [
               14.8,
@@ -6697,7 +6697,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "So I Danced",
           "duration": 173,
-          "audio": "Dear Insanity/歌曲/So I Danced - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/So I Danced - DPR IAN.m4a",
           "lyrics": [
             [
               0.77,
@@ -6949,7 +6949,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Peanut Butter & Tears",
           "duration": 226,
-          "audio": "Dear Insanity/歌曲/Peanut Butter & Tears - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/Peanut Butter & Tears - DPR IAN.m4a",
           "lyrics": [
             [
               0.1,
@@ -7251,7 +7251,7 @@ window.DPRIAN_ALBUMS = {
         {
           "title": "Violet Crazy",
           "duration": 189,
-          "audio": "Dear Insanity/歌曲/Violet Crazy - DPR IAN.m4a",
+          "audio": "DearInsanity/歌曲/Violet Crazy - DPR IAN.m4a",
           "lyrics": [
             [
               21.89,
